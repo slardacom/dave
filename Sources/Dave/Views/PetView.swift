@@ -10,35 +10,42 @@ public struct PetView: View {
 
     public var body: some View {
         VStack(spacing: 4) {
-            // Speech Bubble or Quick Chat Pill (Above Dave)
-            if let speech = manager.currentSpeech {
+            // Top Section: Inline Chat Input OR Speech Bubble OR Quick Dialogue Button
+            if manager.isChatInputVisible {
+                InlineChatInputView()
+                    .transition(.scale(scale: 0.85).combined(with: .opacity))
+                    .frame(height: 100)
+            } else if let speech = manager.currentSpeech {
                 SpeechBubbleView(text: speech) {
-                    DaveChatWindow.shared.toggle()
+                    manager.openChatInput()
                 }
                 .transition(.asymmetric(
                     insertion: .scale(scale: 0.7).combined(with: .opacity),
                     removal: .opacity
                 ))
                 .padding(.horizontal, 8)
-                .frame(maxHeight: 70)
+                .frame(maxHeight: 75)
             } else {
                 Button {
-                    DaveChatWindow.shared.toggle()
+                    manager.openChatInput()
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "bubble.left.and.bubble.right.fill")
                             .font(.system(size: 9))
-                        Text(bridge.isBusy ? "编码中..." : "对话")
+                        Text(bridge.isBusy ? "编码中..." : "💬 对话")
                             .font(.system(size: 10, weight: .bold))
                     }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(Capsule().fill(bridge.isBusy ? Color.orange.opacity(0.9) : Color.blue.opacity(0.85)))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(
+                        Capsule()
+                            .fill(bridge.isBusy ? Color.orange.opacity(0.9) : Color.blue.opacity(0.88))
+                    )
                     .foregroundColor(.white)
-                    .shadow(color: Color.black.opacity(0.2), radius: 2, x: 0, y: 1)
+                    .shadow(color: Color.black.opacity(0.18), radius: 3, x: 0, y: 1)
                 }
                 .buttonStyle(.plain)
-                .frame(height: 20)
+                .frame(height: 24)
             }
 
             // Dave Sprite & Real Carried File
@@ -96,8 +103,8 @@ public struct PetView: View {
                 menuContent
             }
         }
-        .frame(width: 220, height: 240)
-        .padding(8)
+        .frame(width: 260, height: 260)
+        .padding(6)
         .onChange(of: manager.bounceTrigger) { _ in
             triggerBounce()
         }
@@ -130,6 +137,28 @@ public struct PetView: View {
 
     @ViewBuilder
     private var menuContent: some View {
+        Section("特色功能") {
+            Button {
+                manager.openChatInput()
+            } label: {
+                Label("输入指令 / 对话 💬", systemImage: "text.bubble.fill")
+            }
+
+            Button {
+                DaveChatWindow.shared.toggle()
+            } label: {
+                Label("展开详细对话面板 ↗", systemImage: "message.fill")
+            }
+
+            Button {
+                TrashDutyService.shared.performTrashMission()
+            } label: {
+                Label("帮我扔垃圾 (动画演示) 🗑️", systemImage: "trash.circle")
+            }
+        }
+
+        Divider()
+
         Section("Dave 状态切换") {
             ForEach(PetState.allCases.filter {
                 $0 != .dragged && $0 != .running && $0 != .carrying && $0 != .throwing && $0 != .celebrating
@@ -143,22 +172,6 @@ public struct PetView: View {
                         systemImage: manager.currentState == state ? "checkmark.circle.fill" : state.icon
                     )
                 }
-            }
-        }
-
-        Divider()
-
-        Section("特色功能") {
-            Button {
-                DaveChatWindow.shared.toggle()
-            } label: {
-                Label("与 Dave 对话 (调用 Antigravity) 💬", systemImage: "message.fill")
-            }
-
-            Button {
-                TrashDutyService.shared.performTrashMission()
-            } label: {
-                Label("帮我扔垃圾 (动画演示) 🗑️", systemImage: "trash.circle")
             }
         }
 

@@ -52,14 +52,26 @@ public final class PetHostingView: NSHostingView<PetView> {
         dragStartWindowOrigin = self.window?.frame.origin ?? .zero
         isDragging = true
         hasMovedSignificantly = false
+
+        // Forward event down to SwiftUI hierarchy so buttons and TextFields can receive focus & clicks
+        super.mouseDown(with: event)
     }
 
     public override func mouseDragged(with event: NSEvent) {
-        guard isDragging, let window = self.window else { return }
+        guard isDragging, let window = self.window else {
+            super.mouseDragged(with: event)
+            return
+        }
 
         let currentMouseLocation = NSEvent.mouseLocation
         let dx = currentMouseLocation.x - dragStartMouseLocation.x
         let dy = currentMouseLocation.y - dragStartMouseLocation.y
+
+        // Don't drag window if user is typing or interacting with chat input
+        if PetManager.shared.isChatInputVisible {
+            super.mouseDragged(with: event)
+            return
+        }
 
         if !hasMovedSignificantly && (abs(dx) > 3 || abs(dy) > 3) {
             hasMovedSignificantly = true
@@ -68,28 +80,39 @@ public final class PetHostingView: NSHostingView<PetView> {
         }
 
         if hasMovedSignificantly {
-            // Directly move the window origin in screen coordinates.
-            // Screen coordinates in macOS have (0,0) at bottom-left, so dy directly adds to y!
             let newOrigin = NSPoint(
                 x: dragStartWindowOrigin.x + dx,
                 y: dragStartWindowOrigin.y + dy
             )
             window.setFrameOrigin(newOrigin)
+        } else {
+            super.mouseDragged(with: event)
         }
     }
 
     public override func mouseUp(with event: NSEvent) {
         NSCursor.openHand.set()
 
+        // Forward to SwiftUI for Button clicks
+        super.mouseUp(with: event)
+
         if hasMovedSignificantly {
             PetManager.shared.finishDragging()
         } else {
-            // It was a click, not a drag
-            if event.clickCount == 2 {
-                PetManager.shared.cycleState()
-                SoundManager.shared.playHero()
-            } else {
-                PetManager.shared.handlePoke()
+            // It was a click!
+            if !PetManager.shared.isChatInputVisible {
+                let loc = event.locationInWindow
+                // Top area of Dave's window (y > 140) is the dialogue/chat action zone
+                if loc.y > 140 {
+                    PetManager.shared.openChatInput()
+                } else {
+                    if event.clickCount == 2 {
+                        PetManager.shared.cycleState()
+                        SoundManager.shared.playHero()
+                    } else {
+                        PetManager.shared.handlePoke()
+                    }
+                }
             }
         }
 
@@ -98,7 +121,6 @@ public final class PetHostingView: NSHostingView<PetView> {
     }
 
     public override func rightMouseDown(with event: NSEvent) {
-        // Let SwiftUI's context menu handle right-click seamlessly
         super.rightMouseDown(with: event)
     }
 }

@@ -2,6 +2,8 @@ import AppKit
 import SwiftUI
 
 public final class PetWindow: NSPanel {
+    public var acceptsKeyFocus: Bool = false
+
     public init(contentRect: NSRect) {
         super.init(
             contentRect: contentRect,
@@ -21,12 +23,12 @@ public final class PetWindow: NSPanel {
         self.isReleasedWhenClosed = false
     }
 
-    // Crucial: Allow clicking and dragging without stealing focus from user's active IDE or terminal
+    // Dynamic key status: allows keyboard input when the chat box is open, but stays non-intrusive otherwise
     public override var canBecomeKey: Bool {
-        return false
+        return acceptsKeyFocus
     }
 
     public override var canBecomeMain: Bool {
-        return false
+        return acceptsKeyFocus
     }
 }

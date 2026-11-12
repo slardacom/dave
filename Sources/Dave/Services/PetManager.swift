@@ -13,6 +13,7 @@ public final class PetManager: ObservableObject {
     @Published public var isHealthReminderEnabled: Bool = true
     @Published public var bounceTrigger: Bool = false
     @Published public var isFacingLeft: Bool = false
+    @Published public var isChatInputVisible: Bool = false
 
     // Real carried file properties
     @Published public var carriedFileIcon: NSImage? = nil
@@ -55,6 +56,23 @@ public final class PetManager: ObservableObject {
         triggerBounce()
         SoundManager.shared.playPop()
         speak(PetQuote.random())
+    }
+
+    public func openChatInput() {
+        isChatInputVisible = true
+        if let win = window as? PetWindow {
+            win.acceptsKeyFocus = true
+            NSApp.activate(ignoringOtherApps: true)
+            win.makeKeyAndOrderFront(nil)
+        }
+        SoundManager.shared.playPop()
+    }
+
+    public func closeChatInput() {
+        isChatInputVisible = false
+        if let win = window as? PetWindow {
+            win.acceptsKeyFocus = false
+        }
     }
 
     public func triggerBounce() {

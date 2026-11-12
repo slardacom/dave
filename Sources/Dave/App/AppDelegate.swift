@@ -26,8 +26,8 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func setupWindow() {
-        let width: CGFloat = 220
-        let height: CGFloat = 240
+        let width: CGFloat = 260
+        let height: CGFloat = 270
 
         let screen = NSScreen.main ?? NSScreen.screens.first!
         let visibleFrame = screen.visibleFrame
