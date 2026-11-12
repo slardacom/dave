@@ -55,6 +55,30 @@ public struct PetQuote {
                 "救命，悬空了悬空了！😵‍💫",
                 "你要把我放去哪个屏幕？👀"
             ].randomElement()!
+        case .running:
+            return [
+                "发现目标文件！看我飞奔过去！🏃‍♂️💨",
+                "稍等，马上就位！⚡️",
+                "跑起来！风一样的工程师！💨"
+            ].randomElement()!
+        case .carrying:
+            return [
+                "抱紧这个大文件，千万别掉！📦",
+                "护送危险代码前往垃圾桶中... 🚨",
+                "沉甸甸的，看来删了不少代码！💪"
+            ].randomElement()!
+        case .throwing:
+            return [
+                "空心三分！走你！🏀🗑️",
+                "暴扣废纸篓！💥",
+                "送你进回收站！👋"
+            ].randomElement()!
+        case .celebrating:
+            return [
+                "搞定！垃圾清理干净啦！🧹✨",
+                "删掉无用代码，一身轻松！🎉",
+                "Dave 出马，一个顶俩！🥳"
+            ].randomElement()!
         case .idle:
             return random()
         }

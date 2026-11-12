@@ -12,6 +12,9 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         setupWindow()
         setupStatusItem()
 
+        // Start file deletion monitor (Desktop / Downloads / Finder)
+        FileTrashMonitor.shared.startMonitoring()
+
         // Welcome greeting from Dave!
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
             PetManager.shared.speak("你好！我是 Dave，你的桌面专属工程师搭档 🚀", duration: 5.0)
@@ -73,6 +76,10 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         speakItem.target = self
         menu.addItem(speakItem)
 
+        let trashMissionItem = NSMenuItem(title: "帮我扔垃圾 (动画演示) 🗑️", action: #selector(triggerTrashMission), keyEquivalent: "t")
+        trashMissionItem.target = self
+        menu.addItem(trashMissionItem)
+
         let snapItem = NSMenuItem(title: "移回屏幕底部 📍", action: #selector(snapToBottom), keyEquivalent: "b")
         snapItem.target = self
         menu.addItem(snapItem)
@@ -99,6 +106,10 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func triggerSpeak() {
         PetManager.shared.speak(PetQuote.random())
         SoundManager.shared.playPop()
+    }
+
+    @objc private func triggerTrashMission() {
+        TrashDutyService.shared.performTrashMission()
     }
 
     @objc private func snapToBottom() {

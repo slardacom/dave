@@ -34,6 +34,7 @@ public struct PetView: View {
 
                 PetSpriteView(state: manager.currentState)
                     .frame(width: 140, height: 140)
+                    .scaleEffect(x: manager.isFacingLeft ? -1 : 1, y: 1)
                     .scaleEffect(bounceScale)
                     .scaleEffect(manager.currentState == .dragged ? 1.08 : 1.0)
             }
@@ -74,6 +75,16 @@ public struct PetView: View {
                         systemImage: manager.currentState == state ? "checkmark.circle.fill" : state.icon
                     )
                 }
+            }
+        }
+
+        Divider()
+
+        Section("特色功能") {
+            Button {
+                TrashDutyService.shared.performTrashMission()
+            } label: {
+                Label("帮我扔垃圾 (动画演示) 🗑️", systemImage: "trash.circle")
             }
         }
 

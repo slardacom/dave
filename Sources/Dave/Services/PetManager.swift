@@ -11,6 +11,7 @@ public final class PetManager: ObservableObject {
     @Published public var isAlwaysOnTop: Bool = true
     @Published public var isHealthReminderEnabled: Bool = true
     @Published public var bounceTrigger: Bool = false
+    @Published public var isFacingLeft: Bool = false
 
     public weak var window: NSWindow?
     private var speechDismissTimer: Timer?
