@@ -32,7 +32,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         let contentRect = NSRect(x: initialX, y: initialY, width: width, height: height)
 
         let petWindow = PetWindow(contentRect: contentRect)
-        let hostingView = NSHostingView(rootView: PetView())
+        let hostingView = PetHostingView()
         petWindow.contentView = hostingView
 
         petWindow.orderFrontRegardless()

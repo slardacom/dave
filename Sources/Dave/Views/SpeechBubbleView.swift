@@ -13,18 +13,18 @@ public struct SpeechBubbleView: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
                 .background(
+                    // Solid high-opacity background without blur shaders to prevent dragging ghosting
                     RoundedRectangle(cornerRadius: 12)
-                        .fill(.ultraThinMaterial)
-                        .shadow(color: Color.black.opacity(0.15), radius: 6, x: 0, y: 3)
+                        .fill(Color(nsColor: .windowBackgroundColor).opacity(0.96))
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.accentColor.opacity(0.3), lineWidth: 1)
+                                .stroke(Color.blue.opacity(0.35), lineWidth: 1.5)
                         )
                 )
 
             // Triangle pointer
             Triangle()
-                .fill(.ultraThinMaterial)
+                .fill(Color(nsColor: .windowBackgroundColor).opacity(0.96))
                 .frame(width: 12, height: 6)
                 .offset(y: -1)
         }

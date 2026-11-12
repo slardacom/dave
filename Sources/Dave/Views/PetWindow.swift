@@ -17,6 +17,8 @@ public final class PetWindow: NSPanel {
         self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
         self.isMovableByWindowBackground = false
         self.hidesOnDeactivate = false
+        self.animationBehavior = .none
+        self.isReleasedWhenClosed = false
     }
 
     // Crucial: Allow clicking and dragging without stealing focus from user's active IDE or terminal

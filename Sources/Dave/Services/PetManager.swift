@@ -10,6 +10,7 @@ public final class PetManager: ObservableObject {
     @Published public var currentSpeech: String? = nil
     @Published public var isAlwaysOnTop: Bool = true
     @Published public var isHealthReminderEnabled: Bool = true
+    @Published public var bounceTrigger: Bool = false
 
     public weak var window: NSWindow?
     private var speechDismissTimer: Timer?
@@ -27,6 +28,30 @@ public final class PetManager: ObservableObject {
         }
         currentState = state
         speak(PetQuote.quote(for: state))
+    }
+
+    public func startDragging() {
+        if currentState != .dragged {
+            previousState = currentState
+            currentState = .dragged
+            SoundManager.shared.playPop()
+        }
+    }
+
+    public func finishDragging() {
+        currentState = previousState
+        SoundManager.shared.playDrop()
+        triggerBounce()
+    }
+
+    public func handlePoke() {
+        triggerBounce()
+        SoundManager.shared.playPop()
+        speak(PetQuote.random())
+    }
+
+    public func triggerBounce() {
+        bounceTrigger.toggle()
     }
 
     public func cycleState() {
@@ -73,7 +98,6 @@ public final class PetManager: ObservableObject {
         SoundManager.shared.playHero()
     }
 
-    // Health / Water reminder every 40 minutes (for demo, configurable)
     private func startHealthReminder() {
         reminderTimer = Timer.scheduledTimer(withTimeInterval: 2400, repeats: true) { [weak self] _ in
             guard let self = self, self.isHealthReminderEnabled else { return }
@@ -83,11 +107,9 @@ public final class PetManager: ObservableObject {
         }
     }
 
-    // Occasionally Dave murmurs something or blinks
     private func startRandomInteractions() {
         randomIdleTimer = Timer.scheduledTimer(withTimeInterval: 120, repeats: true) { [weak self] _ in
             guard let self = self, self.currentState == .idle else { return }
-            // 30% chance to speak randomly
             if Double.random(in: 0...1) < 0.35 {
                 self.speak(PetQuote.random(), duration: 4.5)
             }
