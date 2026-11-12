@@ -1,9 +1,11 @@
 import SwiftUI
 import AppKit
+import UniformTypeIdentifiers
 
 public struct PetView: View {
     @ObservedObject var manager = PetManager.shared
     @State private var bounceScale: CGFloat = 1.0
+    @State private var isDropTargeted: Bool = false
 
     public var body: some View {
         VStack(spacing: 4) {
@@ -22,7 +24,7 @@ public struct PetView: View {
                 Spacer().frame(height: 16)
             }
 
-            // Dave Sprite
+            // Dave Sprite & Real Carried File
             ZStack {
                 // Subtle flat shadow under Dave's feet (no blur filter to avoid ghosting)
                 Ellipse()
@@ -32,13 +34,46 @@ public struct PetView: View {
                     .scaleEffect(manager.currentState == .dragged ? 0.7 : 1.0)
                     .animation(.easeInOut(duration: 0.15), value: manager.currentState)
 
+                // Dave Character Sprite
                 PetSpriteView(state: manager.currentState)
                     .frame(width: 140, height: 140)
                     .scaleEffect(x: manager.isFacingLeft ? -1 : 1, y: 1)
                     .scaleEffect(bounceScale)
                     .scaleEffect(manager.currentState == .dragged ? 1.08 : 1.0)
+
+                // Real Carried File Component (Held above Dave's head)
+                if let fileIcon = manager.carriedFileIcon {
+                    VStack(spacing: 2) {
+                        Image(nsImage: fileIcon)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 44, height: 44)
+                            .shadow(color: Color.black.opacity(0.3), radius: 2, x: 0, y: 1)
+
+                        if let fname = manager.carriedFileName {
+                            Text(fname)
+                                .font(.system(size: 8, weight: .bold))
+                                .foregroundColor(.white)
+                                .lineLimit(1)
+                                .padding(.horizontal, 4)
+                                .padding(.vertical, 1)
+                                .background(RoundedRectangle(cornerRadius: 3).fill(Color.black.opacity(0.6)))
+                        }
+                    }
+                    .offset(
+                        x: manager.isThrowingFile ? (manager.isFacingLeft ? -50 : 50) : 0,
+                        y: manager.isThrowingFile ? 65 : -42
+                    )
+                    .scaleEffect(manager.isThrowingFile ? 0.2 : 1.0)
+                    .opacity(manager.isThrowingFile ? 0.0 : 1.0)
+                    .animation(.easeIn(duration: 0.42), value: manager.isThrowingFile)
+                }
             }
             .contentShape(Rectangle())
+            // Drag-and-drop file onto Dave directly!
+            .onDrop(of: [.fileURL], isTargeted: $isDropTargeted) { providers in
+                handleFileDrop(providers: providers)
+            }
             // Context Menu on Right-Click
             .contextMenu {
                 menuContent
@@ -49,6 +84,20 @@ public struct PetView: View {
         .onChange(of: manager.bounceTrigger) { _ in
             triggerBounce()
         }
+    }
+
+    private func handleFileDrop(providers: [NSItemProvider]) -> Bool {
+        guard let provider = providers.first else { return false }
+        _ = provider.loadObject(ofClass: URL.self) { url, _ in
+            guard let fileURL = url else { return }
+            DispatchQueue.main.async {
+                let name = fileURL.lastPathComponent
+                let icon = PetManager.resolveIcon(name: name, path: fileURL.path)
+                let mouse = NSEvent.mouseLocation
+                TrashDutyService.shared.performPhysicalTrashMission(fileURL: fileURL, name: name, icon: icon, at: mouse)
+            }
+        }
+        return true
     }
 
     private func triggerBounce() {
@@ -65,7 +114,9 @@ public struct PetView: View {
     @ViewBuilder
     private var menuContent: some View {
         Section("Dave 状态切换") {
-            ForEach(PetState.allCases.filter { $0 != .dragged }) { state in
+            ForEach(PetState.allCases.filter {
+                $0 != .dragged && $0 != .running && $0 != .carrying && $0 != .throwing && $0 != .celebrating
+            }) { state in
                 Button {
                     manager.setState(state)
                     SoundManager.shared.playTink()

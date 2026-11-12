@@ -11,8 +11,10 @@ public final class TrashDutyService: ObservableObject {
 
     private init() {}
 
-    /// Main entry point: Performs the full "Run to file -> Pick up -> Run to Dock -> Dunk into Trash -> Celebrate -> Return" sequence
-    public func performTrashMission(from sourcePoint: CGPoint? = nil, filename: String? = nil) {
+    /// Main Simulated Trash Mission:
+    /// Spawns a visual replica so the file DOES NOT disappear on desktop,
+    /// Dave runs to it, physically lifts it off the desktop, carries it across screen to Dock, and throws it in!
+    public func performTrashMission(from sourcePoint: CGPoint? = nil, filename: String? = nil, fileIcon: NSImage? = nil) {
         guard !isBusy else { return }
         guard let window = PetManager.shared.window else { return }
 
@@ -20,86 +22,163 @@ public final class TrashDutyService: ObservableObject {
         let homeOrigin = window.frame.origin
         let screen = window.screen ?? NSScreen.main ?? NSScreen.screens.first!
 
-        // Determine source point (where the file is)
+        let name = filename ?? "代码草稿.swift"
+        let icon = fileIcon ?? PetManager.resolveIcon(name: name)
+
+        // Determine source point (where the file is on the screen)
         let fileLocation: CGPoint
         if let pt = sourcePoint, pt != .zero {
             fileLocation = pt
         } else {
-            // Default to mouse position or a point on desktop
             let mouse = NSEvent.mouseLocation
             if mouse != .zero {
                 fileLocation = mouse
             } else {
-                fileLocation = CGPoint(x: screen.visibleFrame.midX - 100, y: screen.visibleFrame.midY + 100)
+                fileLocation = CGPoint(x: screen.visibleFrame.midX - 100, y: screen.visibleFrame.midY + 80)
             }
         }
 
-        // 1. Target beside the file
+        // 🌟 STEP 1: Immediately spawn the File Ghost Replica on the desktop!
+        // To the user, the file DOES NOT disappear! It remains sitting right there!
+        FileGhostWindow.shared.spawn(at: fileLocation, name: name, icon: icon)
+
+        // Calculate Dave's standing target (beside the file)
         let pickupTarget = CGPoint(
             x: max(screen.visibleFrame.minX, min(screen.visibleFrame.maxX - window.frame.width, fileLocation.x - (window.frame.width / 2))),
-            y: max(screen.visibleFrame.minY, min(screen.visibleFrame.maxY - window.frame.height, fileLocation.y - 40))
+            y: max(screen.visibleFrame.minY, min(screen.visibleFrame.maxY - window.frame.height, fileLocation.y - 30))
         )
 
-        // Step 1: Sprint to the file!
+        // Dave runs towards the file
         PetManager.shared.isFacingLeft = (pickupTarget.x < window.frame.origin.x)
         PetManager.shared.setState(.running)
-        if let name = filename {
-            PetManager.shared.speak("发现待删文件「\(name)」！看我飞奔过去！🏃‍♂️💨", duration: 3.0)
-        } else {
-            PetManager.shared.speak("发现目标文件！看我飞奔过去！🏃‍♂️💨", duration: 3.0)
-        }
+        PetManager.shared.speak("发现待清理文件「\(name)」！看我飞奔过去！🏃‍♂️💨", duration: 3.0)
         SoundManager.shared.playPop()
 
-        smoothMove(window: window, from: window.frame.origin, to: pickupTarget, speed: 580) { [weak self] in
+        smoothMove(window: window, from: window.frame.origin, to: pickupTarget, speed: 600) { [weak self] in
             guard let self = self else { return }
 
-            // Step 2: Pick up the file!
-            PetManager.shared.setState(.carrying)
+            // 🌟 STEP 2: Dave arrives, bends down, and physically lifts the file!
             SoundManager.shared.playPop()
-            PetManager.shared.speak("抱紧文件！准备送往废纸篓！📦", duration: 3.0)
+            PetManager.shared.speak("抱起「\(name)」！准备送往废纸篓！📦", duration: 3.0)
 
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
+            // The ghost window lifts up into Dave's hands and transfers to Dave's sprite
+            FileGhostWindow.shared.liftAndTransfer(to: fileLocation) { [weak self] in
                 guard let self = self else { return }
-                // Step 3: Run to Dock Trash!
-                let trashCenter = self.resolveDockTrashLocation(screen: screen)
-                let dockTrashTarget = CGPoint(
-                    x: max(screen.visibleFrame.minX, min(screen.visibleFrame.maxX - window.frame.width, trashCenter.x - (window.frame.width / 2))),
-                    y: max(screen.frame.minY, trashCenter.y + 15)
-                )
+                PetManager.shared.carriedFileIcon = icon
+                PetManager.shared.carriedFileName = name
+                PetManager.shared.setState(.carrying)
 
-                PetManager.shared.isFacingLeft = (dockTrashTarget.x < window.frame.origin.x)
-                PetManager.shared.speak("护送垃圾文件奔向 Dock 栏！🚨", duration: 3.0)
-
-                self.smoothMove(window: window, from: window.frame.origin, to: dockTrashTarget, speed: 480) { [weak self] in
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
                     guard let self = self else { return }
 
-                    // Step 4: Throw into Trash! (Slam Dunk)
-                    PetManager.shared.setState(.throwing)
-                    SoundManager.shared.playDrop()
-                    PetManager.shared.speak("空心三分！暴扣废纸篓！🏀🗑️", duration: 2.5)
+                    // 🌟 STEP 3: Dave runs to the Dock Trash holding the real file!
+                    let trashCenter = self.resolveDockTrashLocation(screen: screen)
+                    let dockTrashTarget = CGPoint(
+                        x: max(screen.visibleFrame.minX, min(screen.visibleFrame.maxX - window.frame.width, trashCenter.x - (window.frame.width / 2))),
+                        y: max(screen.frame.minY, trashCenter.y + 12)
+                    )
 
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
+                    PetManager.shared.isFacingLeft = (dockTrashTarget.x < window.frame.origin.x)
+                    PetManager.shared.speak("护送文件奔向 Dock 栏废纸篓！🚨", duration: 3.0)
+
+                    self.smoothMove(window: window, from: window.frame.origin, to: dockTrashTarget, speed: 480) { [weak self] in
                         guard let self = self else { return }
-                        // Step 5: Celebrate victory!
-                        PetManager.shared.setState(.celebrating)
-                        SoundManager.shared.playHero()
-                        if let name = filename {
-                            PetManager.shared.speak("「\(name)」已消灭！干净利落！🧹✨", duration: 3.5)
-                        } else {
-                            PetManager.shared.speak("文件已成功扔进废纸篓！一身轻松！🎉✨", duration: 3.5)
-                        }
 
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
-                            guard let self = self else { return }
-                            // Step 6: Run back home
-                            PetManager.shared.isFacingLeft = (homeOrigin.x < window.frame.origin.x)
-                            PetManager.shared.setState(.running)
+                        // 🌟 STEP 4: Slam Dunk into Trash!
+                        PetManager.shared.setState(.throwing)
+                        PetManager.shared.isThrowingFile = true
+                        SoundManager.shared.playDrop()
+                        PetManager.shared.speak("空心投掷！精准入桶！🏀🗑️", duration: 2.5)
 
-                            self.smoothMove(window: window, from: window.frame.origin, to: homeOrigin, speed: 500) { [weak self] in
-                                PetManager.shared.setState(.idle)
-                                PetManager.shared.isFacingLeft = false
-                                self?.isBusy = false
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                            PetManager.shared.carriedFileIcon = nil
+                            PetManager.shared.carriedFileName = nil
+                            PetManager.shared.isThrowingFile = false
+
+                            // 🌟 STEP 5: Celebrate victory!
+                            PetManager.shared.setState(.celebrating)
+                            SoundManager.shared.playHero()
+                            PetManager.shared.speak("「\(name)」已安全送达！清理完毕！🧹✨", duration: 3.5)
+
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
+                                guard let self = self else { return }
+
+                                // 🌟 STEP 6: Run back home
+                                PetManager.shared.isFacingLeft = (homeOrigin.x < window.frame.origin.x)
+                                PetManager.shared.setState(.running)
+
+                                self.smoothMove(window: window, from: window.frame.origin, to: homeOrigin, speed: 520) { [weak self] in
+                                    PetManager.shared.setState(.idle)
+                                    PetManager.shared.isFacingLeft = false
+                                    self?.isBusy = false
+                                }
                             }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// Real Physical Drag-and-Drop Trash Mission:
+    /// When a user drags a file directly onto Dave, Dave holds it, runs to Dock,
+    /// and physically deletes the file ONLY when Dave throws it into the trash!
+    public func performPhysicalTrashMission(fileURL: URL, name: String, icon: NSImage, at point: CGPoint) {
+        guard !isBusy else { return }
+        guard let window = PetManager.shared.window else { return }
+
+        isBusy = true
+        let homeOrigin = window.frame.origin
+        let screen = window.screen ?? NSScreen.main ?? NSScreen.screens.first!
+
+        // Dave immediately catches the file
+        PetManager.shared.carriedFileIcon = icon
+        PetManager.shared.carriedFileName = name
+        PetManager.shared.setState(.carrying)
+        SoundManager.shared.playPop()
+        PetManager.shared.speak("接住「\(name)」啦！我来帮你扔掉！📦", duration: 3.0)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
+            guard let self = self else { return }
+
+            let trashCenter = self.resolveDockTrashLocation(screen: screen)
+            let dockTrashTarget = CGPoint(
+                x: max(screen.visibleFrame.minX, min(screen.visibleFrame.maxX - window.frame.width, trashCenter.x - (window.frame.width / 2))),
+                y: max(screen.frame.minY, trashCenter.y + 12)
+            )
+
+            PetManager.shared.isFacingLeft = (dockTrashTarget.x < window.frame.origin.x)
+
+            self.smoothMove(window: window, from: window.frame.origin, to: dockTrashTarget, speed: 480) { [weak self] in
+                guard let self = self else { return }
+
+                // Throw into Trash!
+                PetManager.shared.setState(.throwing)
+                PetManager.shared.isThrowingFile = true
+                SoundManager.shared.playDrop()
+
+                // Physically move the real file to macOS Trash at this exact moment!
+                try? FileManager.default.trashItem(at: fileURL, resultingItemURL: nil)
+
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                    PetManager.shared.carriedFileIcon = nil
+                    PetManager.shared.carriedFileName = nil
+                    PetManager.shared.isThrowingFile = false
+
+                    PetManager.shared.setState(.celebrating)
+                    SoundManager.shared.playHero()
+                    PetManager.shared.speak("「\(name)」已扔进废纸篓！任务完成！🎉✨", duration: 3.5)
+
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
+                        guard let self = self else { return }
+
+                        PetManager.shared.isFacingLeft = (homeOrigin.x < window.frame.origin.x)
+                        PetManager.shared.setState(.running)
+
+                        self.smoothMove(window: window, from: window.frame.origin, to: homeOrigin, speed: 520) { [weak self] in
+                            PetManager.shared.setState(.idle)
+                            PetManager.shared.isFacingLeft = false
+                            self?.isBusy = false
                         }
                     }
                 }
@@ -138,7 +217,6 @@ public final class TrashDutyService: ObservableObject {
                     let sx = parts[2]
                     let sy = parts[3]
 
-                    // Convert from Carbon screen coordinates (top-left) to AppKit (bottom-left)
                     let centerCarbonX = px + (sx / 2)
                     let centerCarbonY = py + (sy / 2)
                     let appKitX = centerCarbonX
@@ -159,7 +237,6 @@ public final class TrashDutyService: ObservableObject {
         return fallback
     }
 
-    /// Smoothly translates the window at a given speed in points per second using a high-precision timer
     private func smoothMove(window: NSWindow, from start: CGPoint, to target: CGPoint, speed: CGFloat, completion: @escaping () -> Void) {
         moveTimer?.invalidate()
 
@@ -181,7 +258,6 @@ public final class TrashDutyService: ObservableObject {
             currentStep += 1
             let progress = min(1.0, Double(currentStep) / Double(totalSteps))
 
-            // Smooth cubic ease-in-out
             let ease = progress * progress * (3.0 - 2.0 * progress)
             let curX = start.x + dx * ease
             let curY = start.y + dy * ease
@@ -201,5 +277,6 @@ public final class TrashDutyService: ObservableObject {
         moveTimer?.invalidate()
         moveTimer = nil
         isBusy = false
+        FileGhostWindow.shared.hide()
     }
 }

@@ -1,6 +1,7 @@
 import AppKit
 import Foundation
 import SwiftUI
+import UniformTypeIdentifiers
 
 public final class PetManager: ObservableObject {
     public static let shared = PetManager()
@@ -12,6 +13,11 @@ public final class PetManager: ObservableObject {
     @Published public var isHealthReminderEnabled: Bool = true
     @Published public var bounceTrigger: Bool = false
     @Published public var isFacingLeft: Bool = false
+
+    // Real carried file properties
+    @Published public var carriedFileIcon: NSImage? = nil
+    @Published public var carriedFileName: String? = nil
+    @Published public var isThrowingFile: Bool = false
 
     public weak var window: NSWindow?
     private var speechDismissTimer: Timer?
@@ -56,7 +62,9 @@ public final class PetManager: ObservableObject {
     }
 
     public func cycleState() {
-        let all = PetState.allCases.filter { $0 != .dragged }
+        let all = PetState.allCases.filter {
+            $0 != .dragged && $0 != .running && $0 != .carrying && $0 != .throwing && $0 != .celebrating
+        }
         if let idx = all.firstIndex(of: currentState) {
             let next = all[(idx + 1) % all.count]
             setState(next)
@@ -97,6 +105,23 @@ public final class PetManager: ObservableObject {
         let newY = screenRect.minY + 20
         window.setFrameOrigin(NSPoint(x: newX, y: newY))
         SoundManager.shared.playHero()
+    }
+
+    public static func resolveIcon(name: String, path: String? = nil) -> NSImage {
+        if let path = path, FileManager.default.fileExists(atPath: path) {
+            let img = NSWorkspace.shared.icon(forFile: path)
+            img.size = NSSize(width: 56, height: 56)
+            return img
+        }
+        let ext = (name as NSString).pathExtension
+        if !ext.isEmpty, let uti = UTType(filenameExtension: ext) {
+            let img = NSWorkspace.shared.icon(for: uti)
+            img.size = NSSize(width: 56, height: 56)
+            return img
+        }
+        let img = NSWorkspace.shared.icon(for: .item)
+        img.size = NSSize(width: 56, height: 56)
+        return img
     }
 
     private func startHealthReminder() {

@@ -42,8 +42,9 @@ public final class FileTrashMonitor {
             if let deletedFile = userFiles.first {
                 // Detected desktop file deletion!
                 let mouse = NSEvent.mouseLocation
+                let icon = PetManager.resolveIcon(name: deletedFile)
                 DispatchQueue.main.async {
-                    TrashDutyService.shared.performTrashMission(from: mouse, filename: deletedFile)
+                    TrashDutyService.shared.performTrashMission(from: mouse, filename: deletedFile, fileIcon: icon)
                 }
             }
         }
@@ -78,8 +79,9 @@ public final class FileTrashMonitor {
             let userFiles = removed.filter { !$0.hasPrefix(".") && !$0.hasPrefix("~$") }
             if let deletedFile = userFiles.first {
                 let mouse = NSEvent.mouseLocation
+                let icon = PetManager.resolveIcon(name: deletedFile)
                 DispatchQueue.main.async {
-                    TrashDutyService.shared.performTrashMission(from: mouse, filename: deletedFile)
+                    TrashDutyService.shared.performTrashMission(from: mouse, filename: deletedFile, fileIcon: icon)
                 }
             }
         }
