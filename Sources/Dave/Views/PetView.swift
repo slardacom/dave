@@ -4,15 +4,16 @@ import UniformTypeIdentifiers
 
 public struct PetView: View {
     @ObservedObject var manager = PetManager.shared
+    @ObservedObject var bridge = AntigravityBridge.shared
     @State private var bounceScale: CGFloat = 1.0
     @State private var isDropTargeted: Bool = false
 
     public var body: some View {
         VStack(spacing: 4) {
-            // Speech Bubble (Above Dave)
+            // Speech Bubble or Quick Chat Pill (Above Dave)
             if let speech = manager.currentSpeech {
                 SpeechBubbleView(text: speech) {
-                    manager.dismissSpeech()
+                    DaveChatWindow.shared.toggle()
                 }
                 .transition(.asymmetric(
                     insertion: .scale(scale: 0.7).combined(with: .opacity),
@@ -21,7 +22,23 @@ public struct PetView: View {
                 .padding(.horizontal, 8)
                 .frame(maxHeight: 70)
             } else {
-                Spacer().frame(height: 16)
+                Button {
+                    DaveChatWindow.shared.toggle()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "bubble.left.and.bubble.right.fill")
+                            .font(.system(size: 9))
+                        Text(bridge.isBusy ? "编码中..." : "对话")
+                            .font(.system(size: 10, weight: .bold))
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(Capsule().fill(bridge.isBusy ? Color.orange.opacity(0.9) : Color.blue.opacity(0.85)))
+                    .foregroundColor(.white)
+                    .shadow(color: Color.black.opacity(0.2), radius: 2, x: 0, y: 1)
+                }
+                .buttonStyle(.plain)
+                .frame(height: 20)
             }
 
             // Dave Sprite & Real Carried File
@@ -132,6 +149,12 @@ public struct PetView: View {
         Divider()
 
         Section("特色功能") {
+            Button {
+                DaveChatWindow.shared.toggle()
+            } label: {
+                Label("与 Dave 对话 (调用 Antigravity) 💬", systemImage: "message.fill")
+            }
+
             Button {
                 TrashDutyService.shared.performTrashMission()
             } label: {

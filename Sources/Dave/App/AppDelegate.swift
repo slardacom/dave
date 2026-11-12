@@ -15,6 +15,9 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         // Start file deletion monitor (Desktop / Downloads / Finder)
         FileTrashMonitor.shared.startMonitoring()
 
+        // Start Antigravity Bridge
+        AntigravityBridge.shared.startListening()
+
         // Welcome greeting from Dave!
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
             PetManager.shared.speak("你好！我是 Dave，你的桌面专属工程师搭档 🚀", duration: 5.0)
@@ -76,6 +79,10 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         speakItem.target = self
         menu.addItem(speakItem)
 
+        let chatItem = NSMenuItem(title: "与 Dave 对话 (调用 Antigravity) 💬", action: #selector(toggleChat), keyEquivalent: "d")
+        chatItem.target = self
+        menu.addItem(chatItem)
+
         let trashMissionItem = NSMenuItem(title: "帮我扔垃圾 (动画演示) 🗑️", action: #selector(triggerTrashMission), keyEquivalent: "t")
         trashMissionItem.target = self
         menu.addItem(trashMissionItem)
@@ -106,6 +113,10 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func triggerSpeak() {
         PetManager.shared.speak(PetQuote.random())
         SoundManager.shared.playPop()
+    }
+
+    @objc private func toggleChat() {
+        DaveChatWindow.shared.toggle()
     }
 
     @objc private func triggerTrashMission() {
