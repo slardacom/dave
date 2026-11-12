@@ -9,6 +9,11 @@ public struct ChatMessage: Identifiable, Equatable {
     public let timestamp = Date()
 }
 
+public struct AntigravityDaemonInfo {
+    public let port: Int
+    public let csrfToken: String
+}
+
 public final class AntigravityBridge: ObservableObject {
     public static let shared = AntigravityBridge()
 
@@ -52,7 +57,7 @@ public final class AntigravityBridge: ObservableObject {
         // 1. Record chat message
         messages.append(ChatMessage(sender: "user", content: prompt))
 
-        // 2. Put Dave into busy coding mode
+        // 2. Put Dave into busy coding mode immediately
         self.isBusy = true
         self.currentTask = prompt
         self.statusText = "正在全力调用 Antigravity 编码中..."
@@ -64,11 +69,40 @@ public final class AntigravityBridge: ObservableObject {
         // 3. Update status file
         updateStatusFile(isBusy: true, task: prompt, text: "正在全力编码中...")
 
-        // 4. Invoke Antigravity agentapi CLI in background
+        // 4. Invoke Antigravity agentapi CLI in background with auto-discovered daemon config
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self = self else { return }
             self.dispatchToAntigravity(prompt: prompt)
         }
+    }
+
+    /// Automatically scans and discovers the running Antigravity daemon port & csrfToken
+    public func discoverDaemon() -> AntigravityDaemonInfo? {
+        let daemonDir = URL(fileURLWithPath: NSHomeDirectory() + "/.gemini/antigravity/daemon")
+        guard let files = try? FileManager.default.contentsOfDirectory(
+            at: daemonDir,
+            includingPropertiesForKeys: [.contentModificationDateKey],
+            options: .skipsHiddenFiles
+        ) else {
+            return nil
+        }
+
+        let hubFiles = files.filter { $0.lastPathComponent.hasPrefix("hub_") && $0.pathExtension == "json" }
+            .sorted {
+                let d1 = (try? $0.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? Date.distantPast
+                let d2 = (try? $1.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? Date.distantPast
+                return d1 > d2
+            }
+
+        for file in hubFiles {
+            if let data = try? Data(contentsOf: file),
+               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let port = json["httpPort"] as? Int,
+               let token = json["csrfToken"] as? String {
+                return AntigravityDaemonInfo(port: port, csrfToken: token)
+            }
+        }
+        return nil
     }
 
     private func dispatchToAntigravity(prompt: String) {
@@ -78,10 +112,22 @@ public final class AntigravityBridge: ObservableObject {
         ]
 
         var executed = false
+        let daemon = discoverDaemon()
+
         for binary in agentapiCandidates {
             if FileManager.default.fileExists(atPath: binary) {
                 let process = Process()
                 process.executableURL = URL(fileURLWithPath: binary)
+
+                // Inject Antigravity daemon environment variables
+                var env = ProcessInfo.processInfo.environment
+                if let d = daemon {
+                    env["ANTIGRAVITY_LS_ADDRESS"] = "localhost:\(d.port)"
+                    env["ANTIGRAVITY_CSRF_TOKEN"] = d.csrfToken
+                    env["ANTIGRAVITY_APP_DATA_DIR"] = NSHomeDirectory() + "/.gemini/antigravity"
+                    env["ANTIGRAVITY_CONVERSATION_ID"] = self.conversationId
+                }
+                process.environment = env
 
                 let taskMessage = "【来自桌面小宠物 Dave 的用户指令】\n\(prompt)\n\n（请注意：用户已在桌面小宠物 Dave 中看到你正在全力工作，请在解决任务后更新状态）"
 
@@ -102,6 +148,10 @@ public final class AntigravityBridge: ObservableObject {
                     ]
                 }
 
+                let pipe = Pipe()
+                process.standardOutput = pipe
+                process.standardError = pipe
+
                 do {
                     try process.run()
                     process.waitUntilExit()
@@ -113,13 +163,14 @@ public final class AntigravityBridge: ObservableObject {
             }
         }
 
-        // Backup inbox write
+        // Always write inbox backup
         let inboxURL = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".dave/inbox.json")
         let payload: [String: Any] = [
             "task": prompt,
             "timestamp": Date().timeIntervalSince1970,
             "conversationId": self.conversationId,
-            "executedViaAgentAPI": executed
+            "executedViaAgentAPI": executed,
+            "daemonDiscovered": daemon != nil
         ]
         if let data = try? JSONSerialization.data(withJSONObject: payload, options: .prettyPrinted) {
             try? data.write(to: inboxURL)
