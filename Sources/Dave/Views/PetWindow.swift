@@ -31,4 +31,16 @@ public final class PetWindow: NSPanel {
     public override var canBecomeMain: Bool {
         return acceptsKeyFocus
     }
+
+    public override func keyDown(with event: NSEvent) {
+        if event.keyCode == 53 { // ESC key
+            PetManager.shared.closeChatInput()
+            return
+        }
+        super.keyDown(with: event)
+    }
+
+    public override func cancelOperation(_ sender: Any?) {
+        PetManager.shared.closeChatInput()
+    }
 }

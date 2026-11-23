@@ -21,7 +21,7 @@ public struct InlineChatInputView: View {
                     Circle()
                         .fill(bridge.isBusy ? Color.orange : Color.green)
                         .frame(width: 6, height: 6)
-                    Text(bridge.isBusy ? "Antigravity 编码中" : "派发任务给 Dave & Antigravity")
+                    Text(bridge.isBusy ? "Dave 编码中" : "派发任务给 Dave")
                         .font(.system(size: 10, weight: .bold))
                         .foregroundColor(.primary)
                 }
@@ -41,10 +41,13 @@ public struct InlineChatInputView: View {
                     manager.closeChatInput()
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 13))
+                        .font(.system(size: 14))
                         .foregroundColor(.secondary)
+                        .padding(5)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .help("关闭对话框 (ESC)")
             }
 
             // Input TextField & Send button
@@ -119,6 +122,9 @@ public struct InlineChatInputView: View {
         )
         .onAppear {
             isFocused = true
+        }
+        .onExitCommand {
+            manager.closeChatInput()
         }
     }
 

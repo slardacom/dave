@@ -1,0 +1,38 @@
+{
+  "dave-workspace-sync": {
+    "PreInvocation": [
+      {
+        "type": "command",
+        "command": "python3 ../scripts/antigravity_hook.py pre_invocation"
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ../scripts/antigravity_hook.py pre_tool_use"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ../scripts/antigravity_hook.py post_tool_use"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "type": "command",
+        "command": "python3 ../scripts/antigravity_hook.py stop"
+      }
+    ]
+  }
+}

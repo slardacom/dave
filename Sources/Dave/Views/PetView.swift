@@ -5,103 +5,61 @@ import UniformTypeIdentifiers
 public struct PetView: View {
     @ObservedObject var manager = PetManager.shared
     @ObservedObject var bridge = AntigravityBridge.shared
+    @ObservedObject var peeking = EdgePeekingService.shared
     @State private var bounceScale: CGFloat = 1.0
-    @State private var isDropTargeted: Bool = false
 
     public var body: some View {
-        VStack(spacing: 4) {
+        ZStack(alignment: .bottom) {
+            // Dave Sprite & Real Carried File (Anchored strictly at bottom of window, completely stationary)
+            characterArea
+                .frame(width: 260, height: 140)
+                .padding(.bottom, 8)
+
             // Top Section: Inline Chat Input OR Speech Bubble OR Quick Dialogue Button
-            if manager.isChatInputVisible {
-                InlineChatInputView()
-                    .transition(.scale(scale: 0.85).combined(with: .opacity))
-                    .frame(height: 100)
-            } else if let speech = manager.currentSpeech {
-                SpeechBubbleView(text: speech) {
-                    manager.openChatInput()
-                }
-                .transition(.asymmetric(
-                    insertion: .scale(scale: 0.7).combined(with: .opacity),
-                    removal: .opacity
-                ))
-                .padding(.horizontal, 8)
-                .frame(maxHeight: 75)
-            } else {
-                Button {
-                    manager.openChatInput()
-                } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: "bubble.left.and.bubble.right.fill")
-                            .font(.system(size: 9))
-                        Text(bridge.isBusy ? "编码中..." : "💬 对话")
-                            .font(.system(size: 10, weight: .bold))
+            // Floats strictly above Dave's head without affecting Dave's position
+            VStack(spacing: 0) {
+                Spacer()
+
+                if manager.isChatInputVisible {
+                    InlineChatInputView()
+                        .transition(.scale(scale: 0.85).combined(with: .opacity))
+                        .frame(height: 100)
+                } else if let speech = activeSpeechText, manager.currentState != .peeking {
+                    SpeechBubbleView(text: speech, style: activeSpeechStyle) {
+                        manager.openChatInput()
                     }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
-                    .background(
-                        Capsule()
-                            .fill(bridge.isBusy ? Color.orange.opacity(0.9) : Color.blue.opacity(0.88))
-                    )
-                    .foregroundColor(.white)
-                    .shadow(color: Color.black.opacity(0.18), radius: 3, x: 0, y: 1)
-                }
-                .buttonStyle(.plain)
-                .frame(height: 24)
-            }
-
-            // Dave Sprite & Real Carried File
-            ZStack {
-                // Subtle flat shadow under Dave's feet (no blur filter to avoid ghosting)
-                Ellipse()
-                    .fill(Color.black.opacity(manager.currentState == .dragged ? 0.08 : 0.22))
-                    .frame(width: 80, height: 14)
-                    .offset(y: 52)
-                    .scaleEffect(manager.currentState == .dragged ? 0.7 : 1.0)
-                    .animation(.easeInOut(duration: 0.15), value: manager.currentState)
-
-                // Dave Character Sprite
-                PetSpriteView(state: manager.currentState)
-                    .frame(width: 140, height: 140)
-                    .scaleEffect(x: manager.isFacingLeft ? -1 : 1, y: 1)
-                    .scaleEffect(bounceScale)
-                    .scaleEffect(manager.currentState == .dragged ? 1.08 : 1.0)
-
-                // Real Carried File Component (Held above Dave's head)
-                if let fileIcon = manager.carriedFileIcon {
-                    VStack(spacing: 2) {
-                        Image(nsImage: fileIcon)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 44, height: 44)
-                            .shadow(color: Color.black.opacity(0.3), radius: 2, x: 0, y: 1)
-
-                        if let fname = manager.carriedFileName {
-                            Text(fname)
-                                .font(.system(size: 8, weight: .bold))
-                                .foregroundColor(.white)
-                                .lineLimit(1)
-                                .padding(.horizontal, 4)
-                                .padding(.vertical, 1)
-                                .background(RoundedRectangle(cornerRadius: 3).fill(Color.black.opacity(0.6)))
+                    .transition(.asymmetric(
+                        insertion: .scale(scale: 0.75).combined(with: .opacity),
+                        removal: .opacity
+                    ))
+                    .padding(.horizontal, 8)
+                    .frame(maxHeight: 80)
+                } else if !bridge.isBusy && manager.currentState != .peeking {
+                    Button {
+                        manager.openChatInput()
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "bubble.left.and.bubble.right.fill")
+                                .font(.system(size: 9))
+                            Text("💬 对话")
+                                .font(.system(size: 10, weight: .bold))
                         }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(
+                            Capsule()
+                                .fill(Color.blue.opacity(0.88))
+                        )
+                        .foregroundColor(.white)
+                        .shadow(color: Color.black.opacity(0.18), radius: 3, x: 0, y: 1)
                     }
-                    .offset(
-                        x: manager.isThrowingFile ? (manager.isFacingLeft ? -50 : 50) : 0,
-                        y: manager.isThrowingFile ? 65 : -42
-                    )
-                    .scaleEffect(manager.isThrowingFile ? 0.2 : 1.0)
-                    .opacity(manager.isThrowingFile ? 0.0 : 1.0)
-                    .animation(.easeIn(duration: 0.42), value: manager.isThrowingFile)
+                    .buttonStyle(.plain)
+                    .frame(height: 24)
+                    .transition(.opacity)
                 }
             }
-            .contentShape(Rectangle())
-            // Drag-and-drop file onto Dave directly!
-            .onDrop(of: [.fileURL], isTargeted: $isDropTargeted) { providers in
-                handleFileDrop(providers: providers)
-            }
-            // Context Menu on Right-Click
-            .contextMenu {
-                menuContent
-            }
+            .frame(maxHeight: .infinity, alignment: .bottom)
+            .padding(.bottom, 148) // Sits directly on top of Dave's head
         }
         .frame(width: 260, height: 260)
         .padding(6)
@@ -110,18 +68,72 @@ public struct PetView: View {
         }
     }
 
-    private func handleFileDrop(providers: [NSItemProvider]) -> Bool {
-        guard let provider = providers.first else { return false }
-        _ = provider.loadObject(ofClass: URL.self) { url, _ in
-            guard let fileURL = url else { return }
-            DispatchQueue.main.async {
-                let name = fileURL.lastPathComponent
-                let icon = PetManager.resolveIcon(name: name, path: fileURL.path)
-                let mouse = NSEvent.mouseLocation
-                TrashDutyService.shared.performPhysicalTrashMission(fileURL: fileURL, name: name, icon: icon, at: mouse)
+    private var activeSpeechText: String? {
+        if let s = manager.currentSpeech, !s.isEmpty {
+            return s
+        }
+        if bridge.isBusy {
+            return bridge.statusText.isEmpty ? "正在工作中... 💻" : bridge.statusText
+        }
+        return nil
+    }
+
+    private var activeSpeechStyle: SpeechBubbleStyle {
+        if manager.currentSpeech != nil {
+            return manager.currentSpeechStyle
+        }
+        if manager.currentState == .celebrating {
+            return .success
+        }
+        return .normal
+    }
+
+    @ViewBuilder
+    private var characterArea: some View {
+        ZStack {
+            // Subtle flat shadow under Dave's feet / desk (hide when clinging/peeking against wall)
+            let isDeskState = manager.currentState == .coding || manager.currentState == .debugging || manager.currentState == .sweating
+            Ellipse()
+                .fill(Color.black.opacity(manager.currentState == .dragged ? 0.08 : (manager.currentState == .peeking ? 0.0 : 0.22)))
+                .frame(width: isDeskState ? 120 : 80, height: 14)
+                .offset(y: 52)
+                .scaleEffect(manager.currentState == .dragged ? 0.7 : 1.0)
+                .animation(.easeInOut(duration: 0.15), value: manager.currentState)
+
+            // Dave Character Sprite
+            // In peeking mode, shift flush to the window edge so Dave's hands grip the physical screen bezel directly!
+            let peekingOffsetX: CGFloat = (manager.currentState == .peeking) ? (manager.isFacingLeft ? 66 : -66) : 0
+            PetSpriteView(state: manager.currentState)
+                .frame(width: 140, height: 140)
+                .scaleEffect(x: manager.isFacingLeft ? -1 : 1, y: 1)
+                .offset(x: peekingOffsetX)
+                .scaleEffect(bounceScale)
+                .scaleEffect(manager.currentState == .dragged ? 1.08 : 1.0)
+                .animation(.spring(response: 0.25, dampingFraction: 0.7), value: manager.currentState)
+
+            // In folded state, display execution indicator or completion checkmark directly above Dave's head
+            let peekingHeadX: CGFloat = manager.isFacingLeft ? 112 : -112
+            if manager.currentState == .peeking {
+                if let result = peeking.peekingResultStyle {
+                    PeekingResultBadge(style: result)
+                        .offset(x: peekingHeadX, y: -52)
+                        .transition(.scale(scale: 0.6).combined(with: .opacity))
+                        .onTapGesture {
+                            withAnimation {
+                                peeking.peekingResultStyle = nil
+                            }
+                        }
+                } else if bridge.isBusy {
+                    PeekingBusyBadge()
+                        .offset(x: peekingHeadX, y: -52)
+                        .transition(.scale(scale: 0.6).combined(with: .opacity))
+                }
             }
         }
-        return true
+        // Context Menu on Right-Click
+        .contextMenu {
+            menuContent
+        }
     }
 
     private func triggerBounce() {
@@ -137,86 +149,37 @@ public struct PetView: View {
 
     @ViewBuilder
     private var menuContent: some View {
-        Section("特色功能") {
-            Button {
-                manager.openChatInput()
-            } label: {
-                Label("输入指令 / 对话 💬", systemImage: "text.bubble.fill")
-            }
-
-            Button {
-                DaveChatWindow.shared.toggle()
-            } label: {
-                Label("展开详细对话面板 ↗", systemImage: "message.fill")
-            }
-
-            Button {
-                TrashDutyService.shared.performTrashMission()
-            } label: {
-                Label("帮我扔垃圾 (动画演示) 🗑️", systemImage: "trash.circle")
-            }
+        Button {
+            manager.toggleAlwaysOnTop()
+        } label: {
+            Label(
+                manager.isAlwaysOnTop ? "取消置顶" : "保持置顶",
+                systemImage: manager.isAlwaysOnTop ? "pin.fill" : "pin"
+            )
         }
 
-        Divider()
-
-        Section("Dave 状态切换") {
-            ForEach(PetState.allCases.filter {
-                $0 != .dragged && $0 != .running && $0 != .carrying && $0 != .throwing && $0 != .celebrating
-            }) { state in
-                Button {
-                    manager.setState(state)
-                    SoundManager.shared.playTink()
-                } label: {
-                    Label(
-                        state.displayName,
-                        systemImage: manager.currentState == state ? "checkmark.circle.fill" : state.icon
-                    )
-                }
-            }
+        Button {
+            manager.isHealthReminderEnabled.toggle()
+        } label: {
+            Label(
+                manager.isHealthReminderEnabled ? "喝水/工休提醒: 开" : "喝水/工休提醒: 关",
+                systemImage: manager.isHealthReminderEnabled ? "drop.fill" : "drop"
+            )
         }
 
-        Divider()
+        Button {
+            SoundManager.shared.isMuted.toggle()
+        } label: {
+            Label(
+                SoundManager.shared.isMuted ? "开启音效" : "静音",
+                systemImage: SoundManager.shared.isMuted ? "speaker.slash" : "speaker.wave.2"
+            )
+        }
 
-        Section("互动与实用功能") {
-            Button {
-                manager.speak(PetQuote.random())
-                SoundManager.shared.playPop()
-            } label: {
-                Label("说句骚话 💬", systemImage: "bubble.left")
-            }
-
-            Button {
-                manager.toggleAlwaysOnTop()
-            } label: {
-                Label(
-                    manager.isAlwaysOnTop ? "取消置顶" : "保持置顶 📌",
-                    systemImage: manager.isAlwaysOnTop ? "pin.fill" : "pin"
-                )
-            }
-
-            Button {
-                manager.isHealthReminderEnabled.toggle()
-            } label: {
-                Label(
-                    manager.isHealthReminderEnabled ? "喝水/工休提醒: 开" : "喝水/工休提醒: 关",
-                    systemImage: manager.isHealthReminderEnabled ? "drop.fill" : "drop"
-                )
-            }
-
-            Button {
-                SoundManager.shared.isMuted.toggle()
-            } label: {
-                Label(
-                    SoundManager.shared.isMuted ? "开启音效 🔊" : "静音 🔇",
-                    systemImage: SoundManager.shared.isMuted ? "speaker.slash" : "speaker.wave.2"
-                )
-            }
-
-            Button {
-                manager.snapToBottom()
-            } label: {
-                Label("回到底部边缘 📍", systemImage: "arrow.down.to.line")
-            }
+        Button {
+            manager.snapToBottom()
+        } label: {
+            Label("回到底部边缘", systemImage: "arrow.down.to.line")
         }
 
         Divider()
@@ -224,7 +187,74 @@ public struct PetView: View {
         Button(role: .destructive) {
             NSApplication.shared.terminate(nil)
         } label: {
-            Label("退出 Dave 🚪", systemImage: "power")
+            Label("退出 Dave", systemImage: "power")
         }
+    }
+}
+
+public struct PeekingResultBadge: View {
+    let style: SpeechBubbleStyle
+    @State private var bounce: CGFloat = 0.6
+
+    public var body: some View {
+        Group {
+            if let img = AssetLoader.shared.iconImage(named: style == .success ? "success" : "failure") {
+                Image(nsImage: img)
+                    .interpolation(.none) // Keep pixel art sharp and crisp!
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 18, height: 18)
+                    .scaleEffect(bounce)
+                    .shadow(color: Color.black.opacity(0.35), radius: 1, x: 0, y: 1)
+            }
+        }
+        .onAppear {
+            withAnimation(.spring(response: 0.25, dampingFraction: 0.5)) {
+                bounce = 1.0
+            }
+        }
+    }
+}
+
+public struct PeekingBusyBadge: View {
+    @State private var currentFrame: Int = 0
+    @State private var timer: Timer?
+
+    private var frames: [NSImage] {
+        AssetLoader.shared.busyIconFrames()
+    }
+
+    public var body: some View {
+        Group {
+            if !frames.isEmpty {
+                let img = frames[currentFrame % frames.count]
+                Image(nsImage: img)
+                    .interpolation(.none) // Keep pixel art sharp and crisp!
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 18, height: 18)
+                    .shadow(color: Color.black.opacity(0.35), radius: 1, x: 0, y: 1)
+            }
+        }
+        .onAppear {
+            startLoop()
+        }
+        .onDisappear {
+            stopLoop()
+        }
+    }
+
+    private func startLoop() {
+        stopLoop()
+        guard !frames.isEmpty else { return }
+        timer = Timer.scheduledTimer(withTimeInterval: 0.22, repeats: true) { _ in
+            let count = max(1, frames.count)
+            currentFrame = (currentFrame + 1) % count
+        }
+    }
+
+    private func stopLoop() {
+        timer?.invalidate()
+        timer = nil
     }
 }

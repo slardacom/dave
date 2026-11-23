@@ -3,6 +3,7 @@ import AppKit
 
 public struct DaveChatView: View {
     @ObservedObject var bridge = AntigravityBridge.shared
+    @ObservedObject var tracker = TokenTracker.shared
     @State private var inputText: String = ""
     var onClose: (() -> Void)?
 
@@ -26,7 +27,7 @@ public struct DaveChatView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Dave · Antigravity 伴侣")
+                    Text("Dave · 桌面工程师")
                         .font(.system(size: 13, weight: .bold))
                         .foregroundColor(.primary)
 
@@ -34,13 +35,26 @@ public struct DaveChatView: View {
                         Circle()
                             .fill(bridge.isBusy ? Color.orange : Color.green)
                             .frame(width: 7, height: 7)
-                        Text(bridge.isBusy ? "Antigravity 全力工作中..." : "就绪 · 随时接受任务")
+                        Text(bridge.isBusy ? "全力工作中..." : "就绪 · 随时接受任务")
                             .font(.system(size: 10))
                             .foregroundColor(.secondary)
                     }
                 }
 
                 Spacer()
+
+                HStack(spacing: 3) {
+                    Image(systemName: "bolt.fill")
+                        .font(.system(size: 8))
+                        .foregroundColor(.yellow)
+                    Text(TokenTracker.formatTokens(tracker.currentUsage.totalTokens))
+                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                        .foregroundColor(.primary)
+                }
+                .padding(.horizontal, 6)
+                .padding(.vertical, 3)
+                .background(Capsule().fill(Color.primary.opacity(0.06)))
+                .help("当前会话 Token 消耗: \(tracker.currentUsage.totalTokens) tokens")
 
                 Button {
                     onClose?()

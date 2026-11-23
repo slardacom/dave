@@ -3,3 +3,8 @@
 build/
 .swiftpm/
 *.xcodeproj
+*.dmg
+__pycache__/
+*.pyc
+*.pyo
+

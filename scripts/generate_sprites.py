@@ -49,6 +49,18 @@ C_DOC_SHADOW = (203, 213, 225, 255)
 C_DOC_LINE = (59, 130, 246, 255)
 C_DOC_CORNER = (226, 232, 240, 255)
 
+# Office Desk & Chair Palette
+C_DESK_WOOD = (194, 137, 88, 255)
+C_DESK_WOOD_LIGHT = (217, 166, 122, 255)
+C_DESK_WOOD_DARK = (146, 96, 55, 255)
+C_DESK_LEG = (51, 65, 85, 255)
+C_DESK_LEG_DARK = (30, 41, 59, 255)
+
+C_CHAIR_BACK = (47, 54, 64, 255)
+C_CHAIR_FRAME = (24, 28, 36, 255)
+C_CHAIR_CUSHION = (53, 59, 72, 255)
+C_CHAIR_BASE = (30, 39, 46, 255)
+
 
 def create_canvas():
     return Image.new("RGBA", (48, 48), C_CLEAR)
@@ -273,70 +285,181 @@ def generate_all():
 
         save_sprite(img, f"Assets/Sprites/idle/frame_{i}.png")
 
-    # ---------------- CODING (4 frames) ----------------
+    # ---------------- CODING (4 frames: Sitting at Office Desk) ----------------
     for i in range(4):
         img = create_canvas()
         draw = ImageDraw.Draw(img)
 
-        draw_legs(draw, offset_y=1)
+        # 1. Chair backrest (behind Dave)
+        draw_rect(draw, 14, 16, 34, 33, C_CHAIR_FRAME)
+        draw_rect(draw, 15, 17, 33, 32, C_CHAIR_BACK)
+        draw_rect(draw, 15, 17, 16, 32, (60, 68, 80, 255))
+
+        # 2. Dave sitting body & head
         draw_body(draw, offset_y=1, breathe=0)
         draw_head(draw, offset_y=1, eyes_state="open")
 
-        draw_rect(draw, 14, 28, 34, 30, C_LAPTOP)
-        draw_rect(draw, 15, 21, 33, 27, C_LAPTOP_SCREEN)
-        draw_rect(draw, 16, 22, 32, 26, (15, 23, 42, 255))
+        # 3. Chair seat & Dave sitting legs
+        draw_rect(draw, 14, 34, 34, 36, C_CHAIR_CUSHION)
+        draw_rect(draw, 23, 37, 25, 41, C_CHAIR_BASE)
+        draw_rect(draw, 20, 41, 28, 42, C_CHAIR_FRAME)
 
+        draw_rect(draw, 18, 33, 30, 36, C_PANTS)
+        draw_rect(draw, 19, 36, 22, 40, C_PANTS)
+        draw_rect(draw, 26, 36, 29, 40, C_PANTS)
+        draw_rect(draw, 18, 41, 22, 42, C_SHOES_WHITE)
+        draw_pixel(draw, 19, 41, C_SHOES_ORANGE)
+        draw_rect(draw, 26, 41, 30, 42, C_SHOES_WHITE)
+        draw_pixel(draw, 29, 41, C_SHOES_ORANGE)
+
+        # 4. Office Desk (Wood surface + metal legs)
+        draw_rect(draw, 7, 34, 9, 41, C_DESK_LEG)
+        draw_rect(draw, 6, 42, 10, 42, C_DESK_LEG_DARK)
+        draw_rect(draw, 39, 34, 41, 41, C_DESK_LEG)
+        draw_rect(draw, 38, 42, 42, 42, C_DESK_LEG_DARK)
+
+        draw_rect(draw, 6, 31, 42, 31, C_DESK_WOOD_LIGHT)
+        draw_rect(draw, 5, 32, 43, 33, C_DESK_WOOD)
+        draw_rect(draw, 6, 34, 42, 34, C_DESK_WOOD_DARK)
+
+        # 5. Accessories on desk: Coffee mug & Sticky note
+        draw_rect(draw, 36, 27, 39, 30, C_MUG_BODY)
+        draw_pixel(draw, 37, 28, C_MUG_LOGO)
+        draw_pixel(draw, 40, 28, C_MUG_BODY)
         if i % 2 == 0:
-            draw_rect(draw, 17, 23, 23, 23, C_CYAN_CODE)
-            draw_rect(draw, 17, 25, 28, 25, C_GREEN_CODE)
-            draw_pixel(draw, 30, 25, C_SHOES_WHITE)
+            draw_pixel(draw, 37, 25, C_STEAM)
+            draw_pixel(draw, 38, 24, C_STEAM)
         else:
-            draw_rect(draw, 17, 23, 27, 23, C_GREEN_CODE)
-            draw_rect(draw, 17, 25, 22, 25, C_CYAN_CODE)
-            draw_pixel(draw, 24, 25, C_SHOES_WHITE)
+            draw_pixel(draw, 38, 25, C_STEAM)
+            draw_pixel(draw, 39, 24, C_STEAM)
 
+        draw_rect(draw, 9, 28, 12, 30, C_YELLOW_WARN)
+        draw_pixel(draw, 10, 29, (202, 138, 4, 255))
+
+        # 6. Laptop on Desk
+        draw_rect(draw, 15, 31, 33, 32, C_LAPTOP)
+        draw_rect(draw, 18, 31, 30, 31, (30, 41, 59, 255))
+        draw_rect(draw, 16, 21, 32, 30, C_LAPTOP)
+        draw_rect(draw, 17, 22, 31, 29, C_LAPTOP_SCREEN)
+
+        # Animated code on screen
+        if i % 2 == 0:
+            draw_rect(draw, 18, 23, 24, 23, C_CYAN_CODE)
+            draw_rect(draw, 18, 25, 29, 25, C_GREEN_CODE)
+            draw_rect(draw, 18, 27, 22, 27, C_CYAN_CODE)
+            draw_pixel(draw, 24, 27, C_SHOES_WHITE)
+        else:
+            draw_rect(draw, 18, 23, 28, 23, C_GREEN_CODE)
+            draw_rect(draw, 18, 25, 23, 25, C_CYAN_CODE)
+            draw_rect(draw, 18, 27, 26, 27, C_GREEN_CODE)
+            draw_pixel(draw, 28, 27, C_SHOES_WHITE)
+
+        # 7. Dave typing hands & arms on keyboard
         if i == 0:
-            draw_rect(draw, 17, 29, 19, 30, C_SKIN)
-            draw_rect(draw, 28, 28, 30, 29, C_SKIN)
+            draw_rect(draw, 15, 26, 17, 30, C_HOODIE_DARK)
+            draw_rect(draw, 17, 30, 19, 31, C_SKIN)
+            draw_rect(draw, 31, 26, 33, 29, C_HOODIE_BLUE)
+            draw_rect(draw, 29, 29, 31, 30, C_SKIN)
         elif i == 1:
-            draw_rect(draw, 17, 28, 19, 29, C_SKIN)
-            draw_rect(draw, 28, 29, 30, 30, C_SKIN)
+            draw_rect(draw, 15, 26, 17, 29, C_HOODIE_DARK)
+            draw_rect(draw, 17, 29, 19, 30, C_SKIN)
+            draw_rect(draw, 31, 26, 33, 30, C_HOODIE_BLUE)
+            draw_rect(draw, 29, 30, 31, 31, C_SKIN)
         elif i == 2:
-            draw_rect(draw, 18, 29, 20, 30, C_SKIN)
-            draw_rect(draw, 27, 29, 29, 30, C_SKIN)
+            draw_rect(draw, 15, 26, 17, 30, C_HOODIE_DARK)
+            draw_rect(draw, 18, 30, 20, 31, C_SKIN)
+            draw_rect(draw, 31, 26, 33, 30, C_HOODIE_BLUE)
+            draw_rect(draw, 28, 30, 30, 31, C_SKIN)
+            draw_pixel(draw, 12, 17, C_CYAN_CODE)
         else:
-            draw_rect(draw, 17, 28, 19, 29, C_SKIN)
-            draw_rect(draw, 28, 28, 30, 29, C_SKIN)
-
-        if i == 1:
-            draw_pixel(draw, 12, 16, C_CYAN_CODE)
-            draw_pixel(draw, 13, 15, C_CYAN_CODE)
-        elif i == 2:
-            draw_pixel(draw, 35, 14, C_GREEN_CODE)
-            draw_pixel(draw, 36, 15, C_GREEN_CODE)
-        elif i == 3:
-            draw_pixel(draw, 11, 14, C_GREEN_CODE)
-            draw_pixel(draw, 37, 16, C_CYAN_CODE)
+            draw_rect(draw, 15, 26, 17, 29, C_HOODIE_DARK)
+            draw_rect(draw, 17, 29, 19, 30, C_SKIN)
+            draw_rect(draw, 31, 26, 33, 29, C_HOODIE_BLUE)
+            draw_rect(draw, 29, 29, 31, 30, C_SKIN)
+            draw_pixel(draw, 36, 17, C_GREEN_CODE)
 
         save_sprite(img, f"Assets/Sprites/coding/frame_{i}.png")
 
-    # ---------------- DEBUGGING (4 frames) ----------------
+    # ---------------- DEBUGGING (4 frames: Sitting at Office Desk Thinking) ----------------
     for i in range(4):
         img = create_canvas()
         draw = ImageDraw.Draw(img)
 
+        # 1. Chair backrest
+        draw_rect(draw, 14, 16, 34, 33, C_CHAIR_FRAME)
+        draw_rect(draw, 15, 17, 33, 32, C_CHAIR_BACK)
+        draw_rect(draw, 15, 17, 16, 32, (60, 68, 80, 255))
+
+        # 2. Dave sitting body & head (head tilts on frames 1 & 2)
         tilt = 1 if i in (1, 2) else 0
-        draw_legs(draw, offset_y=0)
-        draw_body(draw, offset_y=0, breathe=0)
-        draw_head(draw, offset_y=0, eyes_state="open", tilt_x=tilt)
+        draw_body(draw, offset_y=1, breathe=0)
+        draw_head(draw, offset_y=1, eyes_state="open", tilt_x=tilt)
 
-        draw_rect(draw, 15, 24, 16, 28, C_HOODIE_DARK)
-        draw_rect(draw, 17, 28, 18, 29, C_SKIN)
+        # 3. Chair seat & legs
+        draw_rect(draw, 14, 34, 34, 36, C_CHAIR_CUSHION)
+        draw_rect(draw, 23, 37, 25, 41, C_CHAIR_BASE)
+        draw_rect(draw, 20, 41, 28, 42, C_CHAIR_FRAME)
 
-        draw_rect(draw, 32, 23, 33, 27, C_HOODIE_BLUE)
-        draw_rect(draw, 31, 17, 32, 22, C_HOODIE_LIGHT)
-        draw_rect(draw, 29, 14, 31, 16, C_SKIN)
+        draw_rect(draw, 18, 33, 30, 36, C_PANTS)
+        draw_rect(draw, 19, 36, 22, 40, C_PANTS)
+        draw_rect(draw, 26, 36, 29, 40, C_PANTS)
+        draw_rect(draw, 18, 41, 22, 42, C_SHOES_WHITE)
+        draw_pixel(draw, 19, 41, C_SHOES_ORANGE)
+        draw_rect(draw, 26, 41, 30, 42, C_SHOES_WHITE)
+        draw_pixel(draw, 29, 41, C_SHOES_ORANGE)
 
+        # 4. Office Desk
+        draw_rect(draw, 7, 34, 9, 41, C_DESK_LEG)
+        draw_rect(draw, 6, 42, 10, 42, C_DESK_LEG_DARK)
+        draw_rect(draw, 39, 34, 41, 41, C_DESK_LEG)
+        draw_rect(draw, 38, 42, 42, 42, C_DESK_LEG_DARK)
+
+        draw_rect(draw, 6, 31, 42, 31, C_DESK_WOOD_LIGHT)
+        draw_rect(draw, 5, 32, 43, 33, C_DESK_WOOD)
+        draw_rect(draw, 6, 34, 42, 34, C_DESK_WOOD_DARK)
+
+        # 5. Accessories on desk
+        draw_rect(draw, 36, 27, 39, 30, C_MUG_BODY)
+        draw_pixel(draw, 37, 28, C_MUG_LOGO)
+        draw_pixel(draw, 40, 28, C_MUG_BODY)
+        if i % 2 == 0:
+            draw_pixel(draw, 37, 25, C_STEAM)
+            draw_pixel(draw, 38, 24, C_STEAM)
+        else:
+            draw_pixel(draw, 38, 25, C_STEAM)
+            draw_pixel(draw, 39, 24, C_STEAM)
+
+        draw_rect(draw, 9, 28, 12, 30, C_YELLOW_WARN)
+        draw_pixel(draw, 10, 29, (202, 138, 4, 255))
+
+        # 6. Laptop on Desk (displaying Bug or Warning)
+        draw_rect(draw, 15, 31, 33, 32, C_LAPTOP)
+        draw_rect(draw, 18, 31, 30, 31, (30, 41, 59, 255))
+        draw_rect(draw, 16, 21, 32, 30, C_LAPTOP)
+        draw_rect(draw, 17, 22, 31, 29, C_LAPTOP_SCREEN)
+
+        draw_rect(draw, 18, 23, 22, 23, C_CYAN_CODE)
+        if i in (0, 1):
+            draw_rect(draw, 24, 24, 26, 26, C_RED_BUG)
+            draw_pixel(draw, 23, 24, C_GLASSES)
+            draw_pixel(draw, 27, 24, C_GLASSES)
+            draw_pixel(draw, 23, 26, C_GLASSES)
+            draw_pixel(draw, 27, 26, C_GLASSES)
+        else:
+            draw_rect(draw, 24, 24, 26, 26, C_YELLOW_WARN)
+            draw_pixel(draw, 25, 25, (0, 0, 0, 255))
+
+        draw_rect(draw, 18, 28, 27, 28, C_CYAN_CODE)
+
+        # 7. Hands: left hand on desk, right hand scratching hair!
+        draw_rect(draw, 15, 26, 17, 30, C_HOODIE_DARK)
+        draw_rect(draw, 17, 30, 19, 31, C_SKIN)
+
+        draw_rect(draw, 31, 24, 33, 28, C_HOODIE_BLUE)
+        draw_rect(draw, 30, 18, 32, 23, C_HOODIE_LIGHT)
+        draw_rect(draw, 28, 14, 30, 17, C_SKIN)
+
+        # 8. Floating Question Mark / Sparkle
         if i in (0, 1):
             qy = 4 if i == 0 else 3
             draw_rect(draw, 11, qy, 14, qy, C_YELLOW_WARN)
@@ -344,14 +467,11 @@ def generate_all():
             draw_rect(draw, 12, qy + 2, 13, qy + 2, C_YELLOW_WARN)
             draw_pixel(draw, 12, qy + 4, C_YELLOW_WARN)
         else:
-            bx, by = 38, 7 if i == 2 else 6
-            draw_rect(draw, bx, by, bx + 3, by + 3, C_RED_BUG)
-            draw_pixel(draw, bx - 1, by, C_GLASSES)
-            draw_pixel(draw, bx - 1, by + 2, C_GLASSES)
-            draw_pixel(draw, bx + 4, by, C_GLASSES)
-            draw_pixel(draw, bx + 4, by + 2, C_GLASSES)
-            draw_pixel(draw, bx + 1, by - 3, C_RED_BUG)
-            draw_pixel(draw, bx + 1, by - 2, C_RED_BUG)
+            qy = 4 if i == 2 else 5
+            draw_rect(draw, 38, qy, 41, qy, C_YELLOW_WARN)
+            draw_pixel(draw, 41, qy + 1, C_YELLOW_WARN)
+            draw_rect(draw, 39, qy + 2, 40, qy + 2, C_YELLOW_WARN)
+            draw_pixel(draw, 39, qy + 4, C_YELLOW_WARN)
 
         save_sprite(img, f"Assets/Sprites/debugging/frame_{i}.png")
 
@@ -581,6 +701,159 @@ def generate_all():
             draw_pixel(draw, 12, 5, (56, 189, 248, 255))
 
         save_sprite(img, f"Assets/Sprites/celebrating/frame_{i}.png")
+
+    # ---------------- SWEATING (4 frames: CPU High Load / Overheating) ----------------
+    for i in range(4):
+        img = create_canvas()
+        draw = ImageDraw.Draw(img)
+
+        # 1. Chair backrest
+        draw_rect(draw, 14, 16, 34, 33, C_CHAIR_FRAME)
+        draw_rect(draw, 15, 17, 33, 32, C_CHAIR_BACK)
+
+        # 2. Dave body & head (panting mouth / sweat on face)
+        draw_body(draw, offset_y=1, breathe=1 if i in (1, 3) else 0)
+        draw_head(draw, offset_y=1, eyes_state="wide")
+
+        # Panting mouth
+        draw_rect(draw, 23, 20, 25, 21, (239, 68, 68, 255))
+        draw_pixel(draw, 24, 21, (254, 202, 202, 255))
+
+        # Sweat drops on face
+        if i in (0, 1):
+            draw_pixel(draw, 17, 13, (56, 189, 248, 255))
+            draw_pixel(draw, 18, 14, (186, 230, 253, 255))
+            draw_pixel(draw, 31, 14, (56, 189, 248, 255))
+        else:
+            draw_pixel(draw, 16, 15, (56, 189, 248, 255))
+            draw_pixel(draw, 17, 16, (186, 230, 253, 255))
+            draw_pixel(draw, 31, 16, (56, 189, 248, 255))
+            draw_pixel(draw, 32, 17, (186, 230, 253, 255))
+
+        # 3. Chair seat & legs
+        draw_rect(draw, 14, 34, 34, 36, C_CHAIR_CUSHION)
+        draw_rect(draw, 23, 37, 25, 41, C_CHAIR_BASE)
+        draw_rect(draw, 20, 41, 28, 42, C_CHAIR_FRAME)
+        draw_rect(draw, 18, 33, 30, 36, C_PANTS)
+        draw_rect(draw, 19, 36, 22, 40, C_PANTS)
+        draw_rect(draw, 26, 36, 29, 40, C_PANTS)
+        draw_rect(draw, 18, 41, 22, 42, C_SHOES_WHITE)
+        draw_pixel(draw, 19, 41, C_SHOES_ORANGE)
+        draw_rect(draw, 26, 41, 30, 42, C_SHOES_WHITE)
+        draw_pixel(draw, 29, 41, C_SHOES_ORANGE)
+
+        # 4. Office Desk
+        draw_rect(draw, 7, 34, 9, 41, C_DESK_LEG)
+        draw_rect(draw, 6, 42, 10, 42, C_DESK_LEG_DARK)
+        draw_rect(draw, 39, 34, 41, 41, C_DESK_LEG)
+        draw_rect(draw, 38, 42, 42, 42, C_DESK_LEG_DARK)
+        draw_rect(draw, 6, 31, 42, 31, C_DESK_WOOD_LIGHT)
+        draw_rect(draw, 5, 32, 43, 33, C_DESK_WOOD)
+        draw_rect(draw, 6, 34, 42, 34, C_DESK_WOOD_DARK)
+
+        # 5. Overheating Laptop with red screen & fire/heat wave sparks!
+        draw_rect(draw, 15, 31, 33, 32, C_LAPTOP)
+        draw_rect(draw, 16, 21, 32, 30, C_LAPTOP)
+        draw_rect(draw, 17, 22, 31, 29, (185, 28, 28, 255))
+        if i % 2 == 0:
+            draw_pixel(draw, 21, 18, (249, 115, 22, 255))
+            draw_pixel(draw, 27, 17, (239, 68, 68, 255))
+            draw_pixel(draw, 24, 19, (250, 204, 21, 255))
+        else:
+            draw_pixel(draw, 20, 19, (239, 68, 68, 255))
+            draw_pixel(draw, 28, 18, (249, 115, 22, 255))
+            draw_pixel(draw, 25, 17, (250, 204, 21, 255))
+
+        # 6. Dave Waving a Hand Fan (扇子) with right hand!
+        draw_rect(draw, 15, 26, 17, 30, C_HOODIE_DARK)
+        draw_rect(draw, 16, 22, 18, 25, C_SKIN)
+
+        if i in (0, 2):
+            draw_rect(draw, 31, 24, 34, 27, C_HOODIE_BLUE)
+            draw_rect(draw, 34, 22, 36, 25, C_SKIN)
+            draw_rect(draw, 36, 17, 41, 23, (224, 242, 254, 255))
+            draw_rect(draw, 37, 18, 40, 22, (56, 189, 248, 255))
+            draw_pixel(draw, 33, 18, (186, 230, 253, 200))
+            draw_pixel(draw, 32, 20, (186, 230, 253, 200))
+        else:
+            draw_rect(draw, 31, 24, 34, 27, C_HOODIE_BLUE)
+            draw_rect(draw, 33, 24, 35, 27, C_SKIN)
+            draw_rect(draw, 34, 20, 39, 26, (224, 242, 254, 255))
+            draw_rect(draw, 35, 21, 38, 25, (56, 189, 248, 255))
+            draw_pixel(draw, 30, 21, (186, 230, 253, 200))
+            draw_pixel(draw, 29, 23, (186, 230, 253, 200))
+
+        save_sprite(img, f"Assets/Sprites/sweating/frame_{i}.png")
+
+    # ---------------- PEEKING (4 frames: Clinging to Screen Edge & Peeking) ----------------
+    for i in range(4):
+        img = create_canvas()
+        draw = ImageDraw.Draw(img)
+
+        bob_x = 1 if i in (1, 3) else 0
+        bob_y = -1 if i == 1 else 0
+
+        hx = 9 + bob_x
+        hy = 18 + bob_y
+
+        # Small shoulder curve tucked behind bezel
+        draw_rect(draw, 0, hy + 3, hx - 1, hy + 7, C_HOODIE_BLUE)
+        draw_rect(draw, 0, hy + 6, hx - 2, hy + 8, C_HOODIE_DARK)
+
+        # Hair back
+        draw_rect(draw, 0, hy - 6, hx + 4, hy - 4, C_HAIR_DARK)
+        draw_rect(draw, 1, hy - 7, hx + 3, hy - 5, C_HAIR_MID)
+        draw_pixel(draw, hx, hy - 7, C_HAIR_LIGHT)
+        draw_pixel(draw, hx + 3, hy - 5, C_HAIR_MID)
+
+        # Head / Skin
+        draw_rect(draw, hx - 4, hy - 3, hx + 4, hy + 3, C_SKIN)
+        draw_rect(draw, hx - 3, hy + 3, hx + 2, hy + 4, C_SKIN_SHADOW)
+        draw_pixel(draw, hx + 3, hy + 2, C_BLUSH)
+
+        # Hair bangs
+        draw_rect(draw, hx - 3, hy - 4, hx + 2, hy - 2, C_HAIR_MID)
+        draw_rect(draw, hx - 1, hy - 3, hx + 3, hy - 1, C_HAIR_DARK)
+        draw_pixel(draw, hx + 1, hy, C_HAIR_DARK)
+
+        # Big Glasses
+        draw_rect(draw, hx - 1, hy - 1, hx + 5, hy - 1, C_GLASSES)
+        draw_rect(draw, hx - 1, hy + 3, hx + 5, hy + 3, C_GLASSES)
+        draw_rect(draw, hx - 1, hy - 1, hx - 1, hy + 3, C_GLASSES)
+        draw_rect(draw, hx + 5, hy - 1, hx + 5, hy + 3, C_GLASSES)
+        draw_pixel(draw, hx - 2, hy, C_GLASSES)
+        draw_rect(draw, hx, hy, hx + 4, hy + 2, C_GLASSES_LENS)
+
+        # Eye
+        if i == 2:
+            # Blink / wink
+            draw_pixel(draw, hx + 1, hy + 1, C_EYE)
+            draw_pixel(draw, hx + 2, hy + 1, C_EYE)
+            draw_pixel(draw, hx + 3, hy + 1, C_EYE)
+        else:
+            # Looking into screen
+            draw_rect(draw, hx + 1, hy, hx + 3, hy + 2, C_EYE)
+            draw_pixel(draw, hx + 3, hy, (255, 255, 255, 255))
+
+        # Mouth
+        draw_pixel(draw, hx, hy + 3, (220, 38, 38, 255))
+        draw_pixel(draw, hx + 1, hy + 3, (220, 38, 38, 255))
+
+        # Two little paws gripping bezel at x=0
+        draw_rect(draw, 0, hy - 2, 2, hy, C_SKIN)
+        draw_pixel(draw, 2, hy - 2, C_SKIN_SHADOW)
+        draw_pixel(draw, 2, hy, C_SKIN_SHADOW)
+
+        draw_rect(draw, 0, hy + 4, 2, hy + 6, C_SKIN)
+        draw_pixel(draw, 2, hy + 4, C_SKIN_SHADOW)
+        draw_pixel(draw, 2, hy + 6, C_SKIN_SHADOW)
+
+        # Sparkle on frame 3
+        if i == 3:
+            draw_pixel(draw, hx + 5, hy - 3, (250, 204, 21, 255))
+            draw_pixel(draw, hx + 6, hy - 2, (250, 204, 21, 255))
+
+        save_sprite(img, f"Assets/Sprites/peeking/frame_{i}.png")
 
     print("Successfully generated all sprite frames including running, carrying, throwing, celebrating!")
 

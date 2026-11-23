@@ -31,4 +31,25 @@ public final class SoundManager {
         guard !isMuted else { return }
         NSSound(named: "Bottle")?.play()
     }
+
+    public func playFailure() {
+        playTaskFailure()
+    }
+
+    public func playBasso() {
+        guard !isMuted else { return }
+        NSSound(named: "Basso")?.play()
+    }
+
+    /// Distinct celebratory chime for task success
+    public func playTaskSuccess() {
+        guard !isMuted else { return }
+        NSSound(named: "Glass")?.play()
+    }
+
+    /// Distinct alert warning sound for task failure / interruption
+    public func playTaskFailure() {
+        guard !isMuted else { return }
+        NSSound(named: "Sosumi")?.play()
+    }
 }

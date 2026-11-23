@@ -8,8 +8,8 @@ public enum PetState: String, CaseIterable, Identifiable {
     case sleeping
     case dragged
     case running
-    case carrying
-    case throwing
+    case sweating
+    case peeking
     case celebrating
 
     public var id: String { rawValue }
@@ -23,8 +23,8 @@ public enum PetState: String, CaseIterable, Identifiable {
         case .sleeping: return "午休小憩"
         case .dragged: return "被抓走了"
         case .running: return "全力飞奔"
-        case .carrying: return "抱起文件"
-        case .throwing: return "暴扣垃圾桶"
+        case .sweating: return "满头大汗"
+        case .peeking: return "边缘探头"
         case .celebrating: return "庆祝搞定"
         }
     }
@@ -38,8 +38,8 @@ public enum PetState: String, CaseIterable, Identifiable {
         case .sleeping: return "zzz"
         case .dragged: return "hand.draw"
         case .running: return "figure.run"
-        case .carrying: return "doc.fill"
-        case .throwing: return "trash.fill"
+        case .sweating: return "flame.fill"
+        case .peeking: return "eye.fill"
         case .celebrating: return "party.popper.fill"
         }
     }
@@ -56,8 +56,8 @@ public enum PetState: String, CaseIterable, Identifiable {
         switch self {
         case .coding: return 0.15
         case .running: return 0.12     // Fast running stride
-        case .carrying: return 0.14    // Fast carrying sprint
-        case .throwing: return 0.18    // Slam dunk timing
+        case .sweating: return 0.16    // Fast sweating fan flutter
+        case .peeking: return 0.38     // Gentle cute blinking/peeking
         case .celebrating: return 0.25 // Victory jump
         case .dragged: return 0.18
         case .debugging: return 0.45

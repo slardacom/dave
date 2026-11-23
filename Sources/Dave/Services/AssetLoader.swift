@@ -29,6 +29,33 @@ public final class AssetLoader {
         return loaded
     }
 
+    public func iconImage(named name: String) -> NSImage? {
+        if let cached = cache["icons_\(name)"]?.first {
+            return cached
+        }
+        if let img = loadImage(state: "icons", name: name) {
+            cache["icons_\(name)"] = [img]
+            return img
+        }
+        return nil
+    }
+
+    public func busyIconFrames() -> [NSImage] {
+        if let cached = cache["icons_busy"], !cached.isEmpty {
+            return cached
+        }
+        var frames: [NSImage] = []
+        for i in 0..<4 {
+            if let img = loadImage(state: "icons", name: "busy_\(i)") {
+                frames.append(img)
+            }
+        }
+        if !frames.isEmpty {
+            cache["icons_busy"] = frames
+        }
+        return frames
+    }
+
     private func loadImage(state: String, name: String) -> NSImage? {
         let relativeSubpath = "Sprites/\(state)/\(name).png"
 

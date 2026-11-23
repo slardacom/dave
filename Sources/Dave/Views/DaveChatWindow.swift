@@ -32,6 +32,18 @@ public final class DaveChatWindow: NSPanel {
         return true
     }
 
+    public override func keyDown(with event: NSEvent) {
+        if event.keyCode == 53 { // ESC key
+            hide()
+            return
+        }
+        super.keyDown(with: event)
+    }
+
+    public override func cancelOperation(_ sender: Any?) {
+        hide()
+    }
+
     public func toggle() {
         if self.isVisible {
             hide()
@@ -60,19 +72,25 @@ public final class DaveChatWindow: NSPanel {
         let petFrame = petWin.frame
         let chatWidth: CGFloat = 330
         let chatHeight: CGFloat = 440
+        let visible = screen.visibleFrame
 
         var newX = petFrame.minX - chatWidth - 12
-        if newX < screen.visibleFrame.minX {
+        if newX < visible.minX {
             // Not enough room on the left, place on the right
             newX = petFrame.maxX + 12
         }
 
-        var newY = petFrame.minY
-        if newY + chatHeight > screen.visibleFrame.maxY {
-            newY = screen.visibleFrame.maxY - chatHeight - 10
+        // What if placing on right overflows visible.maxX? Clamp to screen!
+        if newX + chatWidth > visible.maxX {
+            newX = max(visible.minX + 10, visible.maxX - chatWidth - 10)
         }
-        if newY < screen.visibleFrame.minY {
-            newY = screen.visibleFrame.minY + 10
+
+        var newY = petFrame.minY
+        if newY + chatHeight > visible.maxY {
+            newY = visible.maxY - chatHeight - 10
+        }
+        if newY < visible.minY {
+            newY = visible.minY + 10
         }
 
         self.setFrameOrigin(CGPoint(x: newX, y: newY))
