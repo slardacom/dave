@@ -1,10 +1,26 @@
+# macOS
 .DS_Store
+
+# Build artifacts
 .build/
 build/
+*.dmg
+
+# Xcode & Swift Package Manager
 .swiftpm/
 *.xcodeproj
-*.dmg
+xcuserdata/
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Python & Cache
 __pycache__/
 *.pyc
 *.pyo
 
+# Playgrounds & Workspace
+timeline.xctimeline
+playground.xcworkspace
+Carthage/Build/
